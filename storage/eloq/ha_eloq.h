@@ -668,7 +668,8 @@ private:
                                  uint64_t read_ts, bool need_fetch_base,
                                  const EloqKey &eloq_key,
                                  EloqRecord &eloq_record,
-                                 txservice::RecordStatus &rec_status);
+                                 txservice::RecordStatus &rec_status,
+                                 uint64_t &commit_ts);
 
   void AddPushedDownCondition(Item *cond_item);
 

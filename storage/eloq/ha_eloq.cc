@@ -6016,6 +6016,7 @@ int ha_eloq::PkIndexScanNext(uchar *table_record)
   const EloqRecord *result_rec= nullptr;
   auto result_rec_status= txservice::RecordStatus::Deleted;
   std::unique_ptr<EloqRecord> version_miss_rec= nullptr;
+  uint64_t commit_ts= 1U;
 
   txservice::TxKey store_tx_key;
   const EloqKey *store_key= nullptr;
@@ -6269,7 +6270,7 @@ int ha_eloq::PkIndexScanNext(uchar *table_record)
         bool res= ReadSnapshotFromDataStore(
             *GetBaseTableNameFromTableSchema(), GetKVCatalogInfo(),
             tx_start_ts, result_rec_status != RecordStatus::ArchiveVersionMiss,
-            *result_key, *version_miss_rec, result_rec_status);
+            *result_key, *version_miss_rec, result_rec_status, commit_ts);
         if (!res || result_rec_status == RecordStatus::Deleted)
         {
           continue;
@@ -6673,7 +6674,7 @@ int ha_eloq::SkIndexScanNext(uchar *table_record)
         bool res= ReadSnapshotFromDataStore(
             scan_table_name, GetKVCatalogInfo(), tx_start_ts,
             result_rec_status != RecordStatus::ArchiveVersionMiss, *result_key,
-            *version_miss_rec, result_rec_status);
+            *version_miss_rec, result_rec_status, sk_ts);
         if (!res || result_rec_status == RecordStatus::Deleted)
         {
           continue;
@@ -7292,10 +7293,10 @@ bool ha_eloq::ReadSnapshotFromDataStore(
     const txservice::TableName &table_name,
     const txservice::KVCatalogInfo *kv_info, uint64_t read_ts,
     bool need_fetch_base, const EloqKey &eloq_key, EloqRecord &eloq_record,
-    txservice::RecordStatus &rec_status)
+    txservice::RecordStatus &rec_status, uint64_t &commit_ts)
 {
   bool success= true;
-  uint64_t commit_ts= 1U;
+  commit_ts= 1U;
   TxKey tx_key(&eloq_key);
   if (need_fetch_base)
   {
